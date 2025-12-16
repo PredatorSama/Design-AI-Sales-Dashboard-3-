@@ -153,10 +153,10 @@ export function Leads() {
 
   return (
     <div className="p-6 max-w-[1800px] mx-auto">
-      {/* Header */}
-      <div className="mb-6">
-        <h2 className="text-2xl text-[#E5E7EB] mb-1 font-semibold">Leads</h2>
-        <p className="text-[#94a3b8] font-medium">Manage and track your sales leads</p>
+      {/* Page Header */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-[#E5E7EB] mb-2">Leads</h1>
+        <p className="text-[#94a3b8]">Manage and track your sales leads</p>
       </div>
 
       {/* Actions Bar */}

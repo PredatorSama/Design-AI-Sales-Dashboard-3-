@@ -1,8 +1,9 @@
 import { useState, useContext } from 'react';
-import { BookOpen, Copy, Mail, Linkedin, Phone, Eye, CheckCircle } from 'lucide-react';
+import { BookOpen, Copy, Mail, Linkedin, Phone, Eye, CheckCircle, ChevronDown } from 'lucide-react';
 import { AppContext } from '../../store/AppContext';
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
+import { toast } from 'sonner';
 
 interface Blueprint {
   id: string;
@@ -20,7 +21,8 @@ export function Blueprints() {
   const { theme } = useContext(AppContext);
   const [selectedBlueprint, setSelectedBlueprint] = useState<Blueprint | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [filters, setFilters] = useState<string>('all');
+  const [expandedCategory, setExpandedCategory] = useState<string | null>('Email');
+  const [usingTemplate, setUsingTemplate] = useState(false);
 
   const blueprints: Blueprint[] = [
     {
@@ -136,14 +138,27 @@ CLOSE:
     }
   ];
 
-  const filteredBlueprints = filters === 'all' 
-    ? blueprints 
-    : blueprints.filter(b => b.type === filters);
+  // Group blueprints by type for accordion
+  const groupedBlueprints = {
+    'Email': blueprints.filter(b => b.type === 'email'),
+    'LinkedIn': blueprints.filter(b => b.type === 'linkedin'),
+    'Call Scripts': blueprints.filter(b => b.type === 'call-script')
+  };
 
   const handleCopy = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const handleUseTemplate = (blueprint: Blueprint) => {
+    setUsingTemplate(true);
+    
+    setTimeout(() => {
+      setUsingTemplate(false);
+      toast.success(`✨ "${blueprint.name}" template applied! Start customizing your content.`);
+      setSelectedBlueprint(null);
+    }, 1500);
   };
 
   const getTypeColor = (type: string) => {
@@ -154,21 +169,16 @@ CLOSE:
 
   return (
     <div className={`h-full flex flex-col ${theme === 'dark' ? 'bg-[#020617]' : 'bg-[#f8fafc]'}`}>
-      {/* Header */}
+      {/* Page Header */}
       <div className={`px-8 py-6 border-b ${
         theme === 'dark' ? 'border-[#1e293b]' : 'border-[#e2e8f0]'
       }`}>
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 bg-[#2563EB]/20 rounded-lg flex items-center justify-center">
-            <BookOpen className="w-6 h-6 text-[#2563EB]" />
-          </div>
-          <h1 className={`text-2xl font-bold ${
-            theme === 'dark' ? 'text-[#E5E7EB]' : 'text-[#1e293b]'
-          }`}>
-            Blueprints
-          </h1>
-        </div>
-        <p className={`text-sm ${theme === 'dark' ? 'text-[#94a3b8]' : 'text-[#64748b]'}`}>
+        <h1 className={`text-3xl font-bold mb-1 ${
+          theme === 'dark' ? 'text-[#E5E7EB]' : 'text-[#1e293b]'
+        }`}>
+          Templates Hub
+        </h1>
+        <p className={`text-[#94a3b8]`}>
           Pre-built templates for emails, LinkedIn messages, and call scripts
         </p>
       </div>
@@ -176,228 +186,289 @@ CLOSE:
       {/* Main Content */}
       <div className="flex-1 overflow-y-auto">
         <div className="px-8 py-6 space-y-6">
-          {/* Filter Tabs */}
-          <div className="flex gap-2">
-            <button
-              onClick={() => setFilters('all')}
-              className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                filters === 'all'
-                  ? 'bg-[#2563EB] text-white'
-                  : theme === 'dark'
-                  ? 'bg-[#1a1f2e] text-[#cbd5e1] hover:bg-[#222838]'
-                  : 'bg-white text-[#64748b] border border-[#e2e8f0] hover:bg-[#f1f5f9]'
-              }`}
-            >
-              All Blueprints
-            </button>
-            <button
-              onClick={() => setFilters('email')}
-              className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
-                filters === 'email'
-                  ? 'bg-[#2563EB] text-white'
-                  : theme === 'dark'
-                  ? 'bg-[#1a1f2e] text-[#cbd5e1] hover:bg-[#222838]'
-                  : 'bg-white text-[#64748b] border border-[#e2e8f0] hover:bg-[#f1f5f9]'
-              }`}
-            >
-              <Mail className="w-4 h-4" />
-              Email
-            </button>
-            <button
-              onClick={() => setFilters('linkedin')}
-              className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
-                filters === 'linkedin'
-                  ? 'bg-[#2563EB] text-white'
-                  : theme === 'dark'
-                  ? 'bg-[#1a1f2e] text-[#cbd5e1] hover:bg-[#222838]'
-                  : 'bg-white text-[#64748b] border border-[#e2e8f0] hover:bg-[#f1f5f9]'
-              }`}
-            >
-              <Linkedin className="w-4 h-4" />
-              LinkedIn
-            </button>
-            <button
-              onClick={() => setFilters('call-script')}
-              className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
-                filters === 'call-script'
-                  ? 'bg-[#2563EB] text-white'
-                  : theme === 'dark'
-                  ? 'bg-[#1a1f2e] text-[#cbd5e1] hover:bg-[#222838]'
-                  : 'bg-white text-[#64748b] border border-[#e2e8f0] hover:bg-[#f1f5f9]'
-              }`}
-            >
-              <Phone className="w-4 h-4" />
-              Call Scripts
-            </button>
-          </div>
-
-          {/* Blueprints Grid */}
-          <div>
-            {!selectedBlueprint ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {filteredBlueprints.map((blueprint) => (
-                  <Card
-                    key={blueprint.id}
-                    className={`p-6 cursor-pointer transition-all hover:shadow-lg ${
-                      theme === 'dark'
-                        ? 'bg-[#1a1f2e] border-[#1e293b] hover:bg-[#222838]'
-                        : 'bg-white border-[#e2e8f0] hover:bg-[#f1f5f9]'
-                    }`}
-                    onClick={() => setSelectedBlueprint(blueprint)}
-                  >
-                    <div className="flex items-start justify-between mb-3">
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${getTypeColor(blueprint.type)}`}>
-                        <blueprint.icon className="w-5 h-5" />
-                      </div>
-                      <div className={`text-xs font-medium px-2 py-1 rounded-full ${getTypeColor(blueprint.type)}`}>
-                        {blueprint.type === 'email' ? 'Email' : blueprint.type === 'linkedin' ? 'LinkedIn' : 'Call Script'}
-                      </div>
-                    </div>
-                    <h3 className={`font-semibold mb-1 ${
-                      theme === 'dark' ? 'text-[#E5E7EB]' : 'text-[#1e293b]'
-                    }`}>
-                      {blueprint.name}
-                    </h3>
-                    <p className={`text-sm mb-4 ${
-                      theme === 'dark' ? 'text-[#94a3b8]' : 'text-[#64748b]'
-                    }`}>
-                      {blueprint.description}
-                    </p>
-                    <div className="flex items-center justify-between">
-                      <span className={`text-xs ${
-                        theme === 'dark' ? 'text-[#64748b]' : 'text-[#94a3b8]'
-                      }`}>
-                        {blueprint.category}
-                      </span>
-                      <Eye className="w-4 h-4 text-[#2563EB]" />
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <div className="max-w-4xl">
+          {/* Category Accordion */}
+          <div className="space-y-3">
+            {Object.entries(groupedBlueprints).map(([category, items]) => (
+              <div
+                key={category}
+                className={`rounded-lg border ${
+                  theme === 'dark'
+                    ? 'bg-[#0f172a] border-[#1e293b]'
+                    : 'bg-white border-[#e2e8f0]'
+                }`}
+              >
+                {/* Accordion Header */}
                 <button
-                  onClick={() => setSelectedBlueprint(null)}
-                  className={`mb-6 px-4 py-2 rounded-lg font-medium ${
-                    theme === 'dark'
-                      ? 'bg-[#1a1f2e] text-[#cbd5e1] hover:bg-[#222838]'
-                      : 'bg-white text-[#64748b] border border-[#e2e8f0] hover:bg-[#f1f5f9]'
+                  onClick={() =>
+                    setExpandedCategory(
+                      expandedCategory === category ? null : category
+                    )
+                  }
+                  className={`w-full flex items-center justify-between px-6 py-4 font-semibold transition-all hover:bg-[#1a1f2e] ${
+                    expandedCategory === category
+                      ? theme === 'dark'
+                        ? 'bg-[#1a1f2e]'
+                        : 'bg-[#f8fafc]'
+                      : ''
                   }`}
                 >
-                  ← Back to Blueprints
-                </button>
-
-                <Card className={`p-8 ${
-                  theme === 'dark'
-                    ? 'bg-[#1a1f2e] border-[#1e293b]'
-                    : 'bg-white border-[#e2e8f0]'
-                }`}>
-                  <div className="flex items-start justify-between mb-6">
-                    <div className="flex items-start gap-4">
-                      <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${getTypeColor(selectedBlueprint.type)}`}>
-                        <selectedBlueprint.icon className="w-6 h-6" />
-                      </div>
-                      <div>
-                        <h2 className={`text-2xl font-bold mb-2 ${
-                          theme === 'dark' ? 'text-[#E5E7EB]' : 'text-[#1e293b]'
-                        }`}>
-                          {selectedBlueprint.name}
-                        </h2>
-                        <p className={`text-sm ${
-                          theme === 'dark' ? 'text-[#94a3b8]' : 'text-[#64748b]'
-                        }`}>
-                          {selectedBlueprint.description}
-                        </p>
-                      </div>
-                    </div>
-                    <div className={`text-xs font-medium px-3 py-1 rounded-full ${getTypeColor(selectedBlueprint.type)}`}>
-                      {selectedBlueprint.type === 'email' ? 'Email' : selectedBlueprint.type === 'linkedin' ? 'LinkedIn' : 'Call Script'}
-                    </div>
-                  </div>
-
-                  {/* Preview */}
-                  <div className={`p-6 rounded-lg mb-6 ${
-                    theme === 'dark'
-                      ? 'bg-[#0f1419] border border-[#2563EB]/30'
-                      : 'bg-[#f8fafc] border border-[#e2e8f0]'
-                  }`}>
-                    <h3 className={`text-sm font-semibold mb-3 ${
+                  <span
+                    className={`text-lg ${
                       theme === 'dark' ? 'text-[#E5E7EB]' : 'text-[#1e293b]'
-                    }`}>
-                      Preview
-                    </h3>
-                    <p className={`text-sm whitespace-pre-wrap font-mono ${
-                      theme === 'dark' ? 'text-[#cbd5e1]' : 'text-[#475569]'
-                    }`}>
-                      {selectedBlueprint.preview}
-                    </p>
-                  </div>
-
-                  {/* Info & Actions */}
-                  <div className="grid grid-cols-2 gap-4 mb-6">
-                    <div className={`p-4 rounded-lg ${
-                      theme === 'dark' ? 'bg-[#0f1419]' : 'bg-[#f8fafc]'
-                    }`}>
-                      <p className={`text-xs ${
-                        theme === 'dark' ? 'text-[#64748b]' : 'text-[#94a3b8]'
-                      }`}>
-                        Category
-                      </p>
-                      <p className={`font-semibold mt-1 ${
-                        theme === 'dark' ? 'text-[#E5E7EB]' : 'text-[#1e293b]'
-                      }`}>
-                        {selectedBlueprint.category}
-                      </p>
-                    </div>
-                    <div className={`p-4 rounded-lg ${
-                      theme === 'dark' ? 'bg-[#0f1419]' : 'bg-[#f8fafc]'
-                    }`}>
-                      <p className={`text-xs ${
-                        theme === 'dark' ? 'text-[#64748b]' : 'text-[#94a3b8]'
-                      }`}>
-                        Type
-                      </p>
-                      <p className={`font-semibold mt-1 ${
-                        theme === 'dark' ? 'text-[#E5E7EB]' : 'text-[#1e293b]'
-                      }`}>
-                        {selectedBlueprint.type === 'email' ? 'Email' : selectedBlueprint.type === 'linkedin' ? 'LinkedIn' : 'Call Script'}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex gap-3">
-                    <Button
-                      onClick={() => handleCopy(selectedBlueprint.preview, selectedBlueprint.id)}
-                      className="flex-1 bg-[#2563EB] hover:bg-[#1d4ed8] text-white"
-                    >
-                      {copiedId === selectedBlueprint.id ? (
-                        <>
-                          <CheckCircle className="w-4 h-4 mr-2" />
-                          Copied!
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-4 h-4 mr-2" />
-                          Copy Template
-                        </>
-                      )}
-                    </Button>
-                    <Button
-                      onClick={() => setSelectedBlueprint(null)}
-                      className={`flex-1 ${
+                    }`}
+                  >
+                    {category}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`text-sm px-2 py-1 rounded ${
                         theme === 'dark'
-                          ? 'bg-[#1a1f2e] text-[#cbd5e1] hover:bg-[#222838]'
-                          : 'bg-white text-[#64748b] border border-[#e2e8f0] hover:bg-[#f1f5f9]'
+                          ? 'bg-[#2563EB]/20 text-[#60a5fa]'
+                          : 'bg-[#2563EB]/10 text-[#2563EB]'
                       }`}
                     >
-                      Close
-                    </Button>
+                      {items.length}
+                    </span>
+                    <ChevronDown
+                      className={`w-5 h-5 transition-transform ${
+                        expandedCategory === category ? 'rotate-180' : ''
+                      } ${
+                        theme === 'dark'
+                          ? 'text-[#64748b]'
+                          : 'text-[#94a3b8]'
+                      }`}
+                    />
                   </div>
-                </Card>
+                </button>
+
+                {/* Accordion Content */}
+                {expandedCategory === category && (
+                  <div className={`border-t px-6 py-4 ${
+                    theme === 'dark'
+                      ? 'border-[#1e293b]'
+                      : 'border-[#e2e8f0]'
+                  }`}>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {items.map((blueprint) => (
+                        <Card
+                          key={blueprint.id}
+                          className={`p-6 cursor-pointer transition-all hover:shadow-lg ${
+                            theme === 'dark'
+                              ? 'bg-[#1a1f2e] border-[#1e293b] hover:bg-[#222838]'
+                              : 'bg-white border-[#e2e8f0] hover:bg-[#f1f5f9]'
+                          }`}
+                          onClick={() => setSelectedBlueprint(blueprint)}
+                        >
+                          <div className="flex items-start gap-3 mb-3">
+                            <div
+                              className={`p-2 rounded-lg ${getTypeColor(
+                                blueprint.type
+                              )}`}
+                            >
+                              <blueprint.icon className="w-5 h-5" />
+                            </div>
+                            <div className="flex-1">
+                              <h3
+                                className={`font-semibold text-sm mb-1 ${
+                                  theme === 'dark'
+                                    ? 'text-[#E5E7EB]'
+                                    : 'text-[#1e293b]'
+                                }`}
+                              >
+                                {blueprint.name}
+                              </h3>
+                              <p
+                                className={`text-xs ${
+                                  theme === 'dark'
+                                    ? 'text-[#94a3b8]'
+                                    : 'text-[#64748b]'
+                                }`}
+                              >
+                                {blueprint.description}
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCopy(blueprint.preview, blueprint.id);
+                            }}
+                            className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded text-sm font-medium transition-all ${
+                              copiedId === blueprint.id
+                                ? theme === 'dark'
+                                  ? 'bg-green-500/20 text-green-400'
+                                  : 'bg-green-100 text-green-700'
+                                : theme === 'dark'
+                                ? 'bg-[#2563EB]/10 text-[#60a5fa] hover:bg-[#2563EB]/20'
+                                : 'bg-[#2563EB]/10 text-[#2563EB] hover:bg-[#2563EB]/20'
+                            }`}
+                          >
+                            {copiedId === blueprint.id ? (
+                              <>
+                                <CheckCircle className="w-4 h-4" />
+                                Copied!
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="w-4 h-4" />
+                                Copy Template
+                              </>
+                            )}
+                          </button>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
+            ))}
           </div>
+
+          {/* Blueprint Preview Modal */}
+          {selectedBlueprint && (
+            <div className="max-w-4xl">
+              <Button
+                onClick={() => setSelectedBlueprint(null)}
+                className={`mb-6 px-4 py-2 rounded-lg font-medium ${
+                  theme === 'dark'
+                    ? 'bg-[#1a1f2e] text-[#cbd5e1] hover:bg-[#222838]'
+                    : 'bg-white text-[#64748b] border border-[#e2e8f0] hover:bg-[#f1f5f9]'
+                }`}
+              >
+                ← Back to Blueprints
+              </Button>
+
+              <Card className={`p-8 ${
+                theme === 'dark'
+                  ? 'bg-[#1a1f2e] border-[#1e293b]'
+                  : 'bg-white border-[#e2e8f0]'
+              }`}>
+                <div className="flex items-start justify-between mb-6">
+                  <div className="flex items-start gap-4">
+                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${getTypeColor(selectedBlueprint.type)}`}>
+                      <selectedBlueprint.icon className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h2 className={`text-2xl font-bold mb-2 ${
+                        theme === 'dark' ? 'text-[#E5E7EB]' : 'text-[#1e293b]'
+                      }`}>
+                        {selectedBlueprint.name}
+                      </h2>
+                      <p className={`text-sm ${
+                        theme === 'dark' ? 'text-[#94a3b8]' : 'text-[#64748b]'
+                      }`}>
+                        {selectedBlueprint.description}
+                      </p>
+                    </div>
+                  </div>
+                  <div className={`text-xs font-medium px-3 py-1 rounded-full ${getTypeColor(selectedBlueprint.type)}`}>
+                    {selectedBlueprint.type === 'email' ? 'Email' : selectedBlueprint.type === 'linkedin' ? 'LinkedIn' : 'Call Script'}
+                  </div>
+                </div>
+
+                {/* Preview */}
+                <div className={`p-6 rounded-lg mb-6 ${
+                  theme === 'dark'
+                    ? 'bg-[#0f1419] border border-[#2563EB]/30'
+                    : 'bg-[#f8fafc] border border-[#e2e8f0]'
+                }`}>
+                  <h3 className={`text-sm font-semibold mb-3 ${
+                    theme === 'dark' ? 'text-[#E5E7EB]' : 'text-[#1e293b]'
+                  }`}>
+                    Preview
+                  </h3>
+                  <p className={`text-sm whitespace-pre-wrap font-mono ${
+                    theme === 'dark' ? 'text-[#cbd5e1]' : 'text-[#475569]'
+                  }`}>
+                    {selectedBlueprint.preview}
+                  </p>
+                </div>
+
+                {/* Info & Actions */}
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div className={`p-4 rounded-lg ${
+                    theme === 'dark' ? 'bg-[#0f1419]' : 'bg-[#f8fafc]'
+                  }`}>
+                    <p className={`text-xs ${
+                      theme === 'dark' ? 'text-[#64748b]' : 'text-[#94a3b8]'
+                    }`}>
+                      Category
+                    </p>
+                    <p className={`font-semibold mt-1 ${
+                      theme === 'dark' ? 'text-[#E5E7EB]' : 'text-[#1e293b]'
+                    }`}>
+                      {selectedBlueprint.category}
+                    </p>
+                  </div>
+                  <div className={`p-4 rounded-lg ${
+                    theme === 'dark' ? 'bg-[#0f1419]' : 'bg-[#f8fafc]'
+                  }`}>
+                    <p className={`text-xs ${
+                      theme === 'dark' ? 'text-[#64748b]' : 'text-[#94a3b8]'
+                    }`}>
+                      Type
+                    </p>
+                    <p className={`font-semibold mt-1 ${
+                      theme === 'dark' ? 'text-[#E5E7EB]' : 'text-[#1e293b]'
+                    }`}>
+                      {selectedBlueprint.type === 'email' ? 'Email' : selectedBlueprint.type === 'linkedin' ? 'LinkedIn' : 'Call Script'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3">
+                  <Button
+                    onClick={() => handleUseTemplate(selectedBlueprint)}
+                    disabled={usingTemplate}
+                    className="flex-1 bg-[#2563EB] hover:bg-[#1d4ed8] text-white"
+                  >
+                    {usingTemplate ? (
+                      <>
+                        <div className="animate-spin mr-2 w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+                        Using Template...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="w-4 h-4 mr-2" />
+                        Use Template
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    onClick={() => handleCopy(selectedBlueprint.preview, selectedBlueprint.id)}
+                    className={`flex-1 ${
+                      theme === 'dark'
+                        ? 'bg-[#1a1f2e] text-[#cbd5e1] hover:bg-[#222838]'
+                        : 'bg-white text-[#64748b] border border-[#e2e8f0] hover:bg-[#f1f5f9]'
+                    }`}
+                  >
+                    {copiedId === selectedBlueprint.id ? (
+                      <>
+                        <CheckCircle className="w-4 h-4 mr-2" />
+                        Copied!
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-4 h-4 mr-2" />
+                        Copy
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    onClick={() => setSelectedBlueprint(null)}
+                    className={`flex-1 ${
+                      theme === 'dark'
+                        ? 'bg-[#1a1f2e] text-[#cbd5e1] hover:bg-[#222838]'
+                        : 'bg-white text-[#64748b] border border-[#e2e8f0] hover:bg-[#f1f5f9]'
+                    }`}
+                  >
+                    Close
+                  </Button>
+                </div>
+              </Card>
+            </div>
+          )}
         </div>
       </div>
     </div>

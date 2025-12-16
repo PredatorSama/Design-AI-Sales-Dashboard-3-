@@ -36,15 +36,15 @@ export function Sidebar({ currentPage = 'Dashboard', onNavigate }: SidebarProps)
     {
       title: 'Resources',
       items: [
-        { icon: BookOpen, label: t('nav.templates', language), key: 'Templates', active: currentPage === 'Templates' },
+        { icon: BookOpen, label: 'Templates Hub', key: 'Templates', active: currentPage === 'Templates' },
         { icon: TrendingUp, label: t('nav.analytics', language), key: 'Analytics', active: currentPage === 'Analytics' },
-        { icon: Clock, label: t('nav.calendar', language), key: 'Calendar', active: currentPage === 'Calendar' },
+        { icon: Clock, label: 'Planner', key: 'Calendar', active: currentPage === 'Calendar' },
       ]
     },
     {
       title: 'Strategy',
       items: [
-        { icon: BookMarked, label: t('nav.playbooks', language), key: 'Playbooks', active: currentPage === 'Playbooks' },
+        { icon: BookMarked, label: 'Growth Guides', key: 'Playbooks', active: currentPage === 'Playbooks' },
       ]
     }
   ];

@@ -3,6 +3,7 @@ import { Headphones, Phone, PhoneOff, Play, Pause, Volume2, Clock, CheckCircle, 
 import { AppContext } from '../../store/AppContext';
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
+import { toast } from 'sonner';
 
 interface CallRecord {
   id: string;
@@ -95,6 +96,7 @@ export function VoiceAgent() {
       
       setCallRecords([newCall, ...callRecords]);
       setSimulatingCall(false);
+      toast.success('☎️ Call simulated successfully! Check the details above.');
     }, 2000);
   };
 
@@ -112,22 +114,17 @@ export function VoiceAgent() {
 
   return (
     <div className={`h-full flex flex-col ${theme === 'dark' ? 'bg-[#020617]' : 'bg-[#f8fafc]'}`}>
-      {/* Header */}
+      {/* Page Header */}
       <div className={`px-8 py-6 border-b ${
         theme === 'dark' ? 'border-[#1e293b]' : 'border-[#e2e8f0]'
       }`}>
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 bg-[#2563EB]/20 rounded-lg flex items-center justify-center">
-            <Headphones className="w-6 h-6 text-[#2563EB]" />
-          </div>
-          <h1 className={`text-2xl font-bold ${
-            theme === 'dark' ? 'text-[#E5E7EB]' : 'text-[#1e293b]'
-          }`}>
-            Voice Agent
-          </h1>
-        </div>
-        <p className={`text-sm ${theme === 'dark' ? 'text-[#94a3b8]' : 'text-[#64748b]'}`}>
-          AI-powered call management and analysis
+        <h1 className={`text-3xl font-bold mb-1 ${
+          theme === 'dark' ? 'text-[#E5E7EB]' : 'text-[#1e293b]'
+        }`}>
+          Voice & AI
+        </h1>
+        <p className={`text-[#94a3b8]`}>
+          Monitor, analyze, and automate conversations using AI-powered voice and messaging insights
         </p>
       </div>
 

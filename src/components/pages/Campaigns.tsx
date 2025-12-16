@@ -33,19 +33,10 @@ export function Campaigns({ onNewCampaign }: CampaignsProps) {
 
   return (
     <div className="p-6 max-w-[1800px] mx-auto">
-      {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl text-[#E5E7EB] mb-1 font-semibold">Campaigns</h2>
-          <p className="text-[#94a3b8] font-medium">Manage and monitor your outreach campaigns</p>
-        </div>
-        <button
-          onClick={onNewCampaign}
-          className="flex items-center gap-2 px-4 py-2.5 bg-[#2563EB] text-white rounded-lg hover:bg-[#1d4ed8] transition-all shadow-lg shadow-[#2563EB]/20"
-        >
-          <Plus className="w-4 h-4" />
-          New Campaign
-        </button>
+      {/* Page Header */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-[#E5E7EB] mb-2">Campaigns</h1>
+        <p className="text-[#94a3b8]">Manage and monitor your outreach campaigns</p>
       </div>
 
       {/* Search Bar */}

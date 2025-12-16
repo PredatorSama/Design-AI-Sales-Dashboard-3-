@@ -3,6 +3,7 @@ import { Brain, Send, Zap, MessageSquare, Target, RefreshCw, CheckCircle } from 
 import { AppContext } from '../../store/AppContext';
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
+import { toast } from 'sonner';
 
 interface AIAction {
   id: string;
@@ -65,6 +66,7 @@ export function AISalesAgent() {
       
       setActions([newAction, ...actions]);
       setLoading(false);
+      toast.success('✨ Outreach message generated successfully!');
       setTimeout(() => setSelectedAction(null), 3000);
     }, 1500);
   };
@@ -86,6 +88,7 @@ export function AISalesAgent() {
       
       setActions([newAction, ...actions]);
       setLoading(false);
+      toast.success('📊 Prospect analysis completed!');
       setTimeout(() => setSelectedAction(null), 3000);
     }, 1500);
   };
@@ -107,28 +110,24 @@ export function AISalesAgent() {
       
       setActions([newAction, ...actions]);
       setLoading(false);
+      toast.success('🔄 Follow-up strategy generated!');
       setTimeout(() => setSelectedAction(null), 3000);
     }, 1500);
   };
 
   return (
     <div className={`h-full flex flex-col ${theme === 'dark' ? 'bg-[#020617]' : 'bg-[#f8fafc]'}`}>
-      {/* Header */}
+      {/* Page Header */}
       <div className={`px-8 py-6 border-b ${
         theme === 'dark' ? 'border-[#1e293b]' : 'border-[#e2e8f0]'
       }`}>
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 bg-[#2563EB]/20 rounded-lg flex items-center justify-center">
-            <Brain className="w-6 h-6 text-[#2563EB]" />
-          </div>
-          <h1 className={`text-2xl font-bold ${
-            theme === 'dark' ? 'text-[#E5E7EB]' : 'text-[#1e293b]'
-          }`}>
-            AI Sales Agent
-          </h1>
-        </div>
-        <p className={`text-sm ${theme === 'dark' ? 'text-[#94a3b8]' : 'text-[#64748b]'}`}>
-          Automate your sales workflow with AI-powered actions
+        <h1 className={`text-3xl font-bold mb-1 ${
+          theme === 'dark' ? 'text-[#E5E7EB]' : 'text-[#1e293b]'
+        }`}>
+          AI Sales Agent
+        </h1>
+        <p className={`text-[#94a3b8]`}>
+          Automate your sales workflow with AI-powered actions and intelligent insights
         </p>
       </div>
 

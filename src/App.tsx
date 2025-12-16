@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { Navbar } from './components/Navbar';
 import { Dashboard } from './components/Dashboard';
@@ -30,6 +30,7 @@ function AppContent() {
   const [showCampaignWizard, setShowCampaignWizard] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const calendarAddEventRef = useRef<() => void>(() => {});
 
   const { theme, setTheme, language, setLanguage } = useApp();
 
@@ -116,7 +117,7 @@ function AppContent() {
         case 'Analytics':
           return <Analytics />;
         case 'Calendar':
-          return <Calendar />;
+          return <Calendar onAddEventFromNavbar={(ref) => { calendarAddEventRef.current = ref; }} />;
         case 'Settings':
           return <Settings />;
         case 'Profile':
@@ -170,6 +171,7 @@ function AppContent() {
           currentPage={currentPage}
           onNewCampaign={() => setShowCampaignWizard(true)}
           onImportLeads={() => setShowImportModal(true)}
+          onAddEvent={() => calendarAddEventRef.current()}
           onNavigate={setCurrentPage}
         />
         

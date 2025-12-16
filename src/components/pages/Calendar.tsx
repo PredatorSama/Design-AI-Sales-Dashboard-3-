@@ -1,39 +1,48 @@
-import { useState } from 'react';
-import { ChevronLeft, ChevronRight, Plus, Clock, Video, MapPin, Users } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import { useState, useEffect } from 'react';
+import { ChevronLeft, ChevronRight, Plus, Clock, Video, MapPin, Users, X } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Event {
   id: string;
   title: string;
   type: 'meeting' | 'call' | 'demo';
   time: string;
+  date: string;
   duration: string;
   attendees: string[];
   location: string;
   color: string;
+  description: string;
 }
 
-const mockEvents: Record<number, Event[]> = {
+const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+const initialMockEvents: Record<number, Event[]> = {
   5: [
     {
       id: '1',
       title: 'Product Demo - Acme Corp',
       type: 'demo',
       time: '10:00 AM',
+      date: '5',
       duration: '1 hour',
       attendees: ['Sarah Johnson', 'Mike Smith'],
       location: 'Zoom Meeting',
-      color: '#2563EB'
+      color: '#2563EB',
+      description: 'Quarterly product demo'
     },
     {
       id: '2',
       title: 'Follow-up Call',
       type: 'call',
       time: '2:30 PM',
+      date: '5',
       duration: '30 min',
       attendees: ['Emily Rodriguez'],
       location: 'Phone',
-      color: '#10b981'
+      color: '#10b981',
+      description: 'Check in on last demo'
     }
   ],
   12: [
@@ -42,10 +51,12 @@ const mockEvents: Record<number, Event[]> = {
       title: 'Q4 Strategy Meeting',
       type: 'meeting',
       time: '9:00 AM',
+      date: '12',
       duration: '2 hours',
       attendees: ['Team'],
       location: 'Conference Room A',
-      color: '#8b5cf6'
+      color: '#8b5cf6',
+      description: 'Q4 planning session'
     }
   ],
   18: [
@@ -54,31 +65,62 @@ const mockEvents: Record<number, Event[]> = {
       title: 'Enterprise Demo',
       type: 'demo',
       time: '11:00 AM',
+      date: '18',
       duration: '1 hour',
       attendees: ['David Park', 'Lisa Chen'],
       location: 'Google Meet',
-      color: '#2563EB'
+      color: '#2563EB',
+      description: 'Enterprise client demo'
     },
     {
       id: '5',
       title: 'Discovery Call',
       type: 'call',
       time: '3:00 PM',
+      date: '18',
       duration: '45 min',
       attendees: ['John Doe'],
       location: 'Zoom',
-      color: '#10b981'
+      color: '#10b981',
+      description: 'Initial discovery call'
     }
   ]
 };
 
-const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-
-export function Calendar() {
+export function Calendar({ onAddEventFromNavbar }: { onAddEventFromNavbar?: (ref: () => void) => void }) {
   const [currentDate, setCurrentDate] = useState(new Date(2024, 11, 1)); // December 2024
   const [selectedDate, setSelectedDate] = useState(5);
   const [view, setView] = useState<'month' | 'week' | 'day'>('month');
+  const [showEventModal, setShowEventModal] = useState(false);
+  const [events, setEvents] = useState<Record<number, Event[]>>(() => {
+    const stored = localStorage.getItem('calendarEvents');
+    return stored ? JSON.parse(stored) : initialMockEvents;
+  });
+  
+  // Event form state
+  const [formData, setFormData] = useState({
+    title: '',
+    type: 'meeting' as 'meeting' | 'call' | 'demo',
+    time: '10:00 AM',
+    duration: '1 hour',
+    attendees: '',
+    location: '',
+    description: ''
+  });
+
+  const [selectedEventDate, setSelectedEventDate] = useState(5);
+
+  // Persist events to localStorage
+  useEffect(() => {
+    localStorage.setItem('calendarEvents', JSON.stringify(events));
+  }, [events]);
+
+  // Register callback for Navbar button
+  useEffect(() => {
+    if (onAddEventFromNavbar) {
+      onAddEventFromNavbar(() => handleOpenEventModal());
+    }
+  }, [onAddEventFromNavbar]);
 
   const getDaysInMonth = (date: Date) => {
     const year = date.getFullYear();
@@ -106,29 +148,62 @@ export function Calendar() {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
   };
 
-  const handleNewEvent = () => {
-    toast.success('New Event', {
-      description: 'Opening event creation form...',
+  const handleOpenEventModal = (date?: number) => {
+    if (date) {
+      setSelectedEventDate(date);
+    }
+    setShowEventModal(true);
+  };
+
+  const handleCloseEventModal = () => {
+    setShowEventModal(false);
+    setFormData({
+      title: '',
+      type: 'meeting',
+      time: '10:00 AM',
+      duration: '1 hour',
+      attendees: '',
+      location: '',
+      description: ''
     });
   };
 
-  const selectedEvents = mockEvents[selectedDate] || [];
+  const handleSubmitEvent = () => {
+    if (!formData.title.trim() || !formData.location.trim()) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    const newEvent: Event = {
+      id: String(Math.random()),
+      title: formData.title,
+      type: formData.type,
+      time: formData.time,
+      date: String(selectedEventDate),
+      duration: formData.duration,
+      attendees: formData.attendees.split(',').map(a => a.trim()).filter(a => a),
+      location: formData.location,
+      color: formData.type === 'demo' ? '#2563EB' : formData.type === 'call' ? '#10b981' : '#8b5cf6',
+      description: formData.description
+    };
+
+    setEvents(prev => ({
+      ...prev,
+      [selectedEventDate]: [...(prev[selectedEventDate] || []), newEvent]
+    }));
+
+    toast.success(`✅ Event "${formData.title}" added to ${months[currentDate.getMonth()]} ${selectedEventDate}!`);
+    handleCloseEventModal();
+  };
+
+  const selectedEvents = events[selectedDate] || [];
 
   return (
     <div className="p-6 max-w-[1800px] mx-auto">
-      {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl text-[#E5E7EB] mb-1 font-semibold">Calendar</h2>
-          <p className="text-[#94a3b8] font-medium">Manage your meetings and appointments</p>
-        </div>
-        <button 
-          onClick={handleNewEvent}
-          className="flex items-center gap-2 px-4 py-2.5 bg-[#2563EB] text-white rounded-lg hover:bg-[#1d4ed8] transition-all shadow-lg shadow-[#2563EB]/40 font-medium focus:ring-2 focus:ring-[#2563EB]/50"
-        >
-          <Plus className="w-4 h-4" />
-          New Event
-        </button>
+      {/* Page Header */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-[#E5E7EB] mb-2">Calendar</h1>
+        <p className="text-[#94a3b8]">Manage your meetings and appointments</p>
       </div>
 
       <div className="grid grid-cols-3 gap-6">
@@ -193,7 +268,7 @@ export function Calendar() {
           {/* Calendar Grid */}
           <div className="grid grid-cols-7 gap-2">
             {days.map((day, idx) => {
-              const hasEvents = day && mockEvents[day];
+              const hasEvents = day && events[day];
               const isSelected = day === selectedDate;
               const isToday = day === 14;
 
@@ -201,6 +276,7 @@ export function Calendar() {
                 <button
                   key={idx}
                   onClick={() => day && setSelectedDate(day)}
+                  onDoubleClick={() => day && handleOpenEventModal(day)}
                   className={`aspect-square rounded-lg p-2 transition-all relative ${
                     !day
                       ? 'cursor-default'
@@ -210,13 +286,14 @@ export function Calendar() {
                       ? 'bg-[#2563EB]/20 text-[#2563EB] border-2 border-[#2563EB]'
                       : 'bg-[#0f172a] text-[#E5E7EB] hover:bg-[#1e293b]'
                   }`}
+                  title={day && !isSelected ? 'Double-click to add event' : ''}
                 >
                   {day && (
                     <>
                       <span className="text-sm">{day}</span>
                       {hasEvents && (
                         <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-1">
-                          {mockEvents[day].map((_, i) => (
+                          {events[day].map((_, i) => (
                             <div key={i} className={`w-1 h-1 rounded-full ${isSelected ? 'bg-white' : 'bg-[#2563EB]'}`}></div>
                           ))}
                         </div>
@@ -290,12 +367,12 @@ export function Calendar() {
       <div className="mt-6 bg-[#020617] border border-[#1e293b] rounded-xl p-6">
         <h3 className="text-lg text-[#E5E7EB] mb-4">Upcoming This Week</h3>
         <div className="grid grid-cols-3 gap-4">
-          {Object.entries(mockEvents).slice(0, 3).map(([day, events]) => (
+          {Object.entries(events).slice(0, 3).map(([day, dayEvents]) => (
             <div key={day} className="p-4 bg-[#0f172a] border border-[#1e293b] rounded-lg">
               <div className="text-sm text-[#64748b] mb-2">
                 {months[currentDate.getMonth()]} {day}
               </div>
-              {events.map((event) => (
+              {dayEvents.map((event) => (
                 <div key={event.id} className="mb-2 last:mb-0">
                   <div className="text-sm text-[#E5E7EB]">{event.title}</div>
                   <div className="text-xs text-[#64748b]">{event.time}</div>
@@ -305,6 +382,168 @@ export function Calendar() {
           ))}
         </div>
       </div>
+
+      {/* Event Creation Modal */}
+      {showEventModal && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/50 z-40"
+            onClick={handleCloseEventModal}
+          />
+
+          {/* Modal */}
+          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl bg-[#020617] border border-[#1e293b] rounded-xl shadow-2xl z-50 animate-in fade-in slide-in-from-top-4 duration-200">
+            {/* Header */}
+            <div className="flex items-center justify-between px-8 py-6 border-b border-[#1e293b]">
+              <h2 className="text-xl font-bold text-[#E5E7EB]">Add New Event</h2>
+              <button
+                onClick={handleCloseEventModal}
+                className="p-1 text-[#64748b] hover:text-[#E5E7EB] hover:bg-[#1e293b] rounded transition-all"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="px-8 py-6 space-y-6 max-h-[70vh] overflow-y-auto">
+              {/* Title */}
+              <div>
+                <label className="block text-sm font-medium text-[#cbd5e1] mb-2">
+                  Event Title *
+                </label>
+                <input
+                  type="text"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  placeholder="e.g., Client Demo, Team Meeting"
+                  className="w-full px-4 py-2 bg-[#0f172a] border border-[#334155] rounded-lg text-[#E5E7EB] placeholder:text-[#475569] focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]/50"
+                />
+              </div>
+
+              {/* Date Selection */}
+              <div>
+                <label className="block text-sm font-medium text-[#cbd5e1] mb-2">
+                  Date
+                </label>
+                <p className="text-sm text-[#E5E7EB] bg-[#0f172a] px-4 py-2 rounded-lg border border-[#334155]">
+                  {months[currentDate.getMonth()]} {selectedEventDate}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-6">
+                {/* Type */}
+                <div>
+                  <label className="block text-sm font-medium text-[#cbd5e1] mb-2">
+                    Event Type
+                  </label>
+                  <select
+                    value={formData.type}
+                    onChange={(e) => setFormData({ ...formData, type: e.target.value as 'meeting' | 'call' | 'demo' })}
+                    className="w-full px-4 py-2 bg-[#0f172a] border border-[#334155] rounded-lg text-[#E5E7EB] focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]/50"
+                  >
+                    <option value="meeting">Meeting</option>
+                    <option value="call">Call</option>
+                    <option value="demo">Demo</option>
+                  </select>
+                </div>
+
+                {/* Time */}
+                <div>
+                  <label className="block text-sm font-medium text-[#cbd5e1] mb-2">
+                    Time
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.time}
+                    onChange={(e) => setFormData({ ...formData, time: e.target.value })}
+                    placeholder="10:00 AM"
+                    className="w-full px-4 py-2 bg-[#0f172a] border border-[#334155] rounded-lg text-[#E5E7EB] placeholder:text-[#475569] focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]/50"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-6">
+                {/* Duration */}
+                <div>
+                  <label className="block text-sm font-medium text-[#cbd5e1] mb-2">
+                    Duration
+                  </label>
+                  <select
+                    value={formData.duration}
+                    onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
+                    className="w-full px-4 py-2 bg-[#0f172a] border border-[#334155] rounded-lg text-[#E5E7EB] focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]/50"
+                  >
+                    <option value="15 min">15 minutes</option>
+                    <option value="30 min">30 minutes</option>
+                    <option value="45 min">45 minutes</option>
+                    <option value="1 hour">1 hour</option>
+                    <option value="2 hours">2 hours</option>
+                    <option value="3 hours">3 hours</option>
+                  </select>
+                </div>
+
+                {/* Location */}
+                <div>
+                  <label className="block text-sm font-medium text-[#cbd5e1] mb-2">
+                    Location *
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.location}
+                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                    placeholder="e.g., Zoom, Conference Room"
+                    className="w-full px-4 py-2 bg-[#0f172a] border border-[#334155] rounded-lg text-[#E5E7EB] placeholder:text-[#475569] focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]/50"
+                  />
+                </div>
+              </div>
+
+              {/* Attendees */}
+              <div>
+                <label className="block text-sm font-medium text-[#cbd5e1] mb-2">
+                  Attendees (comma-separated)
+                </label>
+                <input
+                  type="text"
+                  value={formData.attendees}
+                  onChange={(e) => setFormData({ ...formData, attendees: e.target.value })}
+                  placeholder="John Doe, Sarah Smith"
+                  className="w-full px-4 py-2 bg-[#0f172a] border border-[#334155] rounded-lg text-[#E5E7EB] placeholder:text-[#475569] focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]/50"
+                />
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="block text-sm font-medium text-[#cbd5e1] mb-2">
+                  Description
+                </label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Add any additional details..."
+                  className="w-full px-4 py-2 bg-[#0f172a] border border-[#334155] rounded-lg text-[#E5E7EB] placeholder:text-[#475569] focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]/50 resize-none h-24"
+                />
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex gap-3 px-8 py-6 border-t border-[#1e293b]">
+              <button
+                onClick={handleCloseEventModal}
+                className="flex-1 px-4 py-2 bg-[#1a1f2e] text-[#cbd5e1] rounded-lg font-medium hover:bg-[#222838] transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSubmitEvent}
+                className="flex-1 px-4 py-2 bg-[#2563EB] text-white rounded-lg font-medium hover:bg-[#1d4ed8] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/50 transition-all"
+              >
+                Create Event
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
